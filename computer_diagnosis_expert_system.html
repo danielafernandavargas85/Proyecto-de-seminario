@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema Experto - Diagnóstico de PC</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #3d4f9d 0%, #9447e1 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #3498db);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .diagnosis-panel {
+            padding: 40px;
+            background: white;
+        }
+
+        .results-panel {
+            padding: 40px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-left: 1px solid #dee2e6;
+        }
+
+        .question-container {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            border-radius: 15px;
+            border-left: 5px solid #3498db;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .question {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+        }
+
+        .option-btn {
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .option-btn:hover {
+            border-color: #3498db;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .option-btn.selected {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            border-color: #27ae60;
+            color: white;
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: linear-gradient(135deg, #7f8c8d, #95a5a6);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(149, 165, 166, 0.4);
+        }
+
+        .diagnosis-result {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-left: 5px solid #e74c3c;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .diagnosis-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+
+        .diagnosis-description {
+            font-size: 1.1em;
+            color: #2c3e50;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .solutions {
+            background: #ecf0f1;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .solutions h4 {
+            color: #27ae60;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+        }
+
+        .solution-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            border-left: 3px solid #27ae60;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .confidence {
+            display: inline-block;
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .no-diagnosis {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1.2em;
+            padding: 40px;
+        }
+
+        .progress-bar {
+            background: #ecf0f1;
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        .rules-info {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+            border: 1px solid #dee2e6;
+        }
+
+        .rules-info h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+
+        .rule-item {
+            padding: 10px 15px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid #3498db;
+            font-size: 0.95em;
+            color: #34495e;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔧 Sistema Experto de Diagnóstico</h1>
+            <p>Diagnóstico inteligente de problemas de computadoras</p>
+        </div>
+
+        <div class="main-content">
+            <div class="diagnosis-panel">
+                <div id="questionContainer"></div>
+
+                <div class="control-buttons">
+                    <button class="btn btn-primary" onclick="nextQuestion()">Siguiente</button>
+                    <button class="btn btn-secondary" onclick="resetDiagnosis()">Reiniciar</button>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="results-panel">
+                <div id="resultsContainer">
+                    <div class="no-diagnosis">
+                        <h3>🤖 Sistema Listo</h3>
+                        <p>Responde las preguntas para obtener un diagnóstico preciso de tu problema</p>
+                    </div>
+                </div>
+
+                <div class="rules-info">
+                    <h3>📋 Motor de Inferencia</h3>
+                    <div id="activeRules"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Base de conocimiento del sistema experto
+        const knowledgeBase = {
+            // Síntomas y problemas
+            symptoms: {
+                power: ['no_power', 'intermittent_power', 'normal_power'],
+                boot: ['no_boot', 'partial_boot', 'slow_boot', 'normal_boot'],
+                display: ['no_display', 'distorted_display', 'blue_screen', 'normal_display'],
+                performance: ['very_slow', 'slow', 'normal', 'fast'],
+                sounds: ['beeping', 'clicking', 'grinding', 'silent'],
+                temperature: ['very_hot', 'warm', 'normal', 'cold'],
+                recent_changes: ['hardware_change', 'software_install', 'update', 'none']
+            },
+
+            // Reglas de diagnóstico
+            rules: [
+                {
+                    id: 'power_supply_failure',
+                    conditions: {
+                        power: 'no_power',
+                        sounds: 'silent'
+                    },
+                    diagnosis: {
+                        problem: 'Falla en la Fuente de Poder',
+                        description: 'La fuente de alimentación no está proporcionando energía al sistema.',
+                        solutions: [
+                            'Verificar que el cable de poder esté conectado correctamente',
+                            'Probar con otro cable de alimentación',
+                            'Verificar el interruptor de la fuente de poder',
+                            'Reemplazar la fuente de alimentación'
+                        ],
+                        confidence: 90
+                    }
+                },
+                {
+                    id: 'motherboard_issue',
+                    conditions: {
+                        power: 'intermittent_power',
+                        boot: 'no_boot',
+                        sounds: 'beeping'
+                    },
+                    diagnosis: {
+                        problem: 'Problema en la Placa Madre',
+                        description: 'La placa madre presenta fallas que impiden el arranque normal.',
+                        solutions: [
+                            'Verificar conexiones de los componentes',
+                            'Resetear la BIOS/UEFI',
+                            'Verificar la batería CMOS',
+                            'Inspeccionar capacitores hinchados'
+                        ],
+                        confidence: 85
+                    }
+                },
+                {
+                    id: 'ram_failure',
+                    conditions: {
+                        power: 'normal_power',
+                        boot: 'no_boot',
+                        sounds: 'beeping'
+                    },
+                    diagnosis: {
+                        problem: 'Falla en la Memoria RAM',
+                        description: 'Los módulos de memoria RAM están defectuosos o mal instalados.',
+                        solutions: [
+                            'Reinsertar los módulos de RAM',
+                            'Probar con un módulo a la vez',
+                            'Limpiar los contactos dorados',
+                            'Reemplazar la memoria RAM'
+                        ],
+                        confidence: 88
+                    }
+                },
+                {
+                    id: 'hard_drive_failure',
+                    conditions: {
+                        boot: 'partial_boot',
+                        sounds: 'clicking',
+                        performance: 'very_slow'
+                    },
+                    diagnosis: {
+                        problem: 'Falla en el Disco Duro',
+                        description: 'El disco duro presenta fallas mecánicas o lógicas.',
+                        solutions: [
+                            'Realizar respaldo inmediato de datos importantes',
+                            'Verificar cables SATA/IDE',
+                            'Ejecutar chkdsk o herramientas de diagnóstico',
+                            'Reemplazar el disco duro'
+                        ],
+                        confidence: 92
+                    }
+                },
+                {
+                    id: 'overheating_cpu',
+                    conditions: {
+                        temperature: 'very_hot',
+                        performance: 'slow',
+                        boot: 'normal_boot'
+                    },
+                    diagnosis: {
+                        problem: 'Sobrecalentamiento del Procesador',
+                        description: 'El CPU está funcionando a temperaturas peligrosamente altas.',
+                        solutions: [
+                            'Limpiar el ventilador y disipador del CPU',
+                            'Aplicar pasta térmica nueva',
+                            'Verificar el funcionamiento de ventiladores',
+                            'Mejorar la ventilación del gabinete'
+                        ],
+                        confidence: 87
+                    }
+                },
+                {
+                    id: 'graphics_card_issue',
+                    conditions: {
+                        display: 'no_display',
+                        power: 'normal_power',
+                        sounds: 'silent'
+                    },
+                    diagnosis: {
+                        problem: 'Problema con la Tarjeta Gráfica',
+                        description: 'La tarjeta gráfica no está funcionando correctamente.',
+                        solutions: [
+                            'Verificar conexiones del monitor',
+                            'Reinsertar la tarjeta gráfica',
+                            'Probar con monitor integrado',
+                            'Actualizar drivers de video'
+                        ],
+                        confidence: 80
+                    }
+                },
+                {
+                    id: 'software_corruption',
+                    conditions: {
+                        boot: 'slow_boot',
+                        display: 'blue_screen',
+                        recent_changes: 'software_install'
+                    },
+                    diagnosis: {
+                        problem: 'Corrupción del Sistema Operativo',
+                        description: 'El sistema operativo presenta archivos dañados o conflictos.',
+                        solutions: [
+                            'Iniciar en modo seguro',
+                            'Ejecutar sfc /scannow',
+                            'Restaurar sistema a punto anterior',
+                            'Reinstalar el sistema operativo'
+                        ],
+                        confidence: 85
+                    }
+                },
+                {
+                    id: 'driver_conflict',
+                    conditions: {
+                        display: 'distorted_display',
+                        recent_changes: 'hardware_change',
+                        boot: 'normal_boot'
+                    },
+                    diagnosis: {
+                        problem: 'Conflicto de Controladores',
+                        description: 'Los drivers instalados están causando conflictos en el sistema.',
+                        solutions: [
+                            'Actualizar drivers desde Device Manager',
+                            'Desinstalar drivers conflictivos',
+                            'Usar herramientas de limpieza de drivers',
+                            'Instalar drivers desde sitio oficial'
+                        ],
+                        confidence: 78
+                    }
+                }
+            ]
+        };
+
+        // Estado del sistema experto
+        let currentSymptoms = {};
+        let currentQuestionIndex = 0;
+        let questionKeys = Object.keys(knowledgeBase.symptoms);
+        let activeRules = [];
+
+        // Preguntas del sistema
+        const questions = {
+            power: '¿Cómo se comporta la alimentación de tu computadora?',
+            boot: '¿Qué sucede cuando intentas encender la computadora?',
+            display: '¿Cómo está funcionando la pantalla?',
+            performance: '¿Cómo calificarías el rendimiento general?',
+            sounds: '¿Qué sonidos hace la computadora?',
+            temperature: '¿Cómo sientes la temperatura del equipo?',
+            recent_changes: '¿Has hecho cambios recientes en el sistema?'
+        };
+
+        const optionLabels = {
+            power: {
+                'no_power': 'No enciende',
+                'intermittent_power': 'Enciende a veces',
+                'normal_power': 'Enciende normal'
+            },
+            boot: {
+                'no_boot': 'No arranca',
+                'partial_boot': 'Arranca parcial',
+                'slow_boot': 'Arranca lento',
+                'normal_boot': 'Arranca normal'
+            },
+            display: {
+                'no_display': 'Sin imagen',
+                'distorted_display': 'Imagen distorsionada',
+                'blue_screen': 'Pantalla azul',
+                'normal_display': 'Display normal'
+            },
+            performance: {
+                'very_slow': 'Muy lento',
+                'slow': 'Lento',
+                'normal': 'Normal',
+                'fast': 'Rápido'
+            },
+            sounds: {
+                'beeping': 'Pitidos',
+                'clicking': 'Clicks',
+                'grinding': 'Ruido mecánico',
+                'silent': 'Silencioso'
+            },
+            temperature: {
+                'very_hot': 'Muy caliente',
+                'warm': 'Tibio',
+                'normal': 'Normal',
+                'cold': 'Frío'
+            },
+            recent_changes: {
+                'hardware_change': 'Cambio hardware',
+                'software_install': 'Instalé software',
+                'update': 'Actualización',
+                'none': 'Ninguno'
+            }
+        };
+
+        function initializeSystem() {
+            displayCurrentQuestion();
+            updateProgress();
+        }
+
+        function displayCurrentQuestion() {
+            if (currentQuestionIndex >= questionKeys.length) {
+                performDiagnosis();
+                return;
+            }
+
+            const questionKey = questionKeys[currentQuestionIndex];
+            const questionText = questions[questionKey];
+            const options = knowledgeBase.symptoms[questionKey];
+
+            const container = document.getElementById('questionContainer');
+            container.innerHTML = `
+                <div class="question-container">
+                    <div class="question">${questionText}</div>
+                    <div class="options">
+                        ${options.map(option => `
+                            <button class="option-btn" data-key="${questionKey}" data-value="${option}">
+                                ${optionLabels[questionKey][option]}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+
+            // Agregar event listeners
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+
+                    const key = this.dataset.key;
+                    const value = this.dataset.value;
+                    currentSymptoms[key] = value;
+                });
+            });
+        }
+
+        function nextQuestion() {
+            const questionKey = questionKeys[currentQuestionIndex];
+
+            if (!currentSymptoms[questionKey]) {
+                alert('Por favor selecciona una opción antes de continuar.');
+                return;
+            }
+
+            currentQuestionIndex++;
+            displayCurrentQuestion();
+            updateProgress();
+            updateActiveRules();
+        }
+
+        function performDiagnosis() {
+            const diagnosis = runInferenceEngine();
+            displayDiagnosis(diagnosis);
+
+            // Ocultar controles de preguntas
+            document.querySelector('.control-buttons').style.display = 'none';
+
+            // Mostrar solo botón de reiniciar
+            document.querySelector('.control-buttons').innerHTML = `
+                <button class="btn btn-secondary" onclick="resetDiagnosis()">Nuevo Diagnóstico</button>
+            `;
+            document.querySelector('.control-buttons').style.display = 'flex';
+        }
+
+        function runInferenceEngine() {
+            const matchingRules = [];
+
+            knowledgeBase.rules.forEach(rule => {
+                let matches = 0;
+                let totalConditions = Object.keys(rule.conditions).length;
+
+                for (let condition in rule.conditions) {
+                    if (currentSymptoms[condition] === rule.conditions[condition]) {
+                        matches++;
+                    }
+                }
+
+                if (matches > 0) {
+                    const matchPercentage = (matches / totalConditions) * 100;
+                    if (matchPercentage >= 60) { // Umbral de confianza
+                        matchingRules.push({
+                            ...rule,
+                            matchPercentage: matchPercentage
+                        });
+                    }
+                }
+            });
+
+            // Ordenar por mejor coincidencia
+            matchingRules.sort((a, b) => b.matchPercentage - a.matchPercentage);
+
+            return matchingRules.slice(0, 3); // Máximo 3 diagnósticos
+        }
+
+        function displayDiagnosis(diagnosisList) {
+            const container = document.getElementById('resultsContainer');
+
+            if (diagnosisList.length === 0) {
+                container.innerHTML = `
+                    <div class="no-diagnosis">
+                        <h3>🤔 Diagnóstico Inconcluso</h3>
+                        <p>No se pudo determinar un problema específico con los síntomas proporcionados.</p>
+                        <p>Recomendamos consultar con un técnico especializado.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = diagnosisList.map(item => `
+                <div class="diagnosis-result">
+                    <div class="diagnosis-title">
+                        🔍 ${item.diagnosis.problem}
+                    </div>
+                    <div class="diagnosis-description">
+                        ${item.diagnosis.description}
+                    </div>
+                    <div class="solutions">
+                        <h4>💡 Soluciones Recomendadas:</h4>
+                        ${item.diagnosis.solutions.map(solution => `
+                            <div class="solution-item">${solution}</div>
+                        `).join('')}
+                    </div>
+                    <div class="confidence">
+                        Confianza: ${Math.round(item.matchPercentage)}%
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateProgress() {
+            const progress = (currentQuestionIndex / questionKeys.length) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+
+        function updateActiveRules() {
+            const activeRulesContainer = document.getElementById('activeRules');
+            const potentialRules = [];
+
+            knowledgeBase.rules.forEach(rule => {
+                let applicableConditions = 0;
+                for (let condition in rule.conditions) {
+                    if (currentSymptoms[condition] === rule.conditions[condition]) {
+                        applicableConditions++;
+                    }
+                }
+
+                if (applicableConditions > 0) {
+                    potentialRules.push({
+                        name: rule.diagnosis.problem,
+                        conditions: applicableConditions,
+                        total: Object.keys(rule.conditions).length
+                    });
+                }
+            });
+
+            if (potentialRules.length > 0) {
+                activeRulesContainer.innerHTML = potentialRules.map(rule => `
+                    <div class="rule-item">
+                        ${rule.name} (${rule.conditions}/${rule.total} condiciones)
+                    </div>
+                `).join('');
+            } else {
+                activeRulesContainer.innerHTML = '<div class="rule-item">Analizando síntomas...</div>';
+            }
+        }
+
+        function resetDiagnosis() {
+            currentSymptoms = {};
+            currentQuestionIndex = 0;
+            activeRules = [];
+
+            document.querySelector('.control-buttons').innerHTML = `
+                <button class="btn btn-primary" onclick="nextQuestion()">Siguiente</button>
+                <button class="btn btn-secondary" onclick="resetDiagnosis()">Reiniciar</button>
+            `;
+
+            document.getElementById('resultsContainer').innerHTML = `
+                <div class="no-diagnosis">
+                    <h3>🤖 Sistema Listo</h3>
+                    <p>Responde las preguntas para obtener un diagnóstico preciso de tu problema</p>
+                </div>
+            `;
+
+            initializeSystem();
+        }
+
+        // Inicializar el sistema al cargar la página
+        window.onload = initializeSystem;
+    </script>
+</body>
+
+</html>
